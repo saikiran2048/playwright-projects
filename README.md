@@ -38,14 +38,30 @@ npm run report        # open the last HTML report
 
 ```
 eventhub-framework/
-├── tests/            # spec files
-├── pages/            # page objects + reusable components
-├── fixtures/         # custom Playwright fixtures (auth, API client, etc.)
-├── utils/            # data generators, helpers
-├── config/           # environment config loading
-├── test-data/        # static JSON/YAML fixtures
+├── .env.example
+├── .gitignore
+├── README.md
+├── package.json
+├── package-lock.json
 ├── playwright.config.ts
-└── .env.example
+├── tsconfig.json
+├── config/
+│   └── README.md
+├── fixtures/
+│   └── README.md
+├── pages/
+│   ├── README.md
+│   └── components/
+│       └── README.md
+├── test-data/
+│   └── README.md
+├── tests/
+│   ├── api/
+│   │   └── README.md
+│   └── e2e/
+│       └── README.md
+└── utils/
+    └── README.md
 ```
 
 *(folders are added as each stage is built — this list will grow)*
@@ -57,8 +73,8 @@ See `.env.example`. Copy it to `.env` (gitignored) and fill in real values — n
 ## Roadmap
 
 - [x] Stage 0 — Project setup & tooling
-- [ ] Stage 1 — Config layer (`playwright.config.ts`)
-- [ ] Stage 2 — Folder structure
+- [x] Stage 1 — Config layer (`playwright.config.ts`)
+- [x] Stage 2 — Folder structure
 - [ ] Stage 3 — Page Object Model
 - [ ] Stage 4 — Component objects & composition
 - [ ] Stage 5 — Fixtures & dependency injection

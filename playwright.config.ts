@@ -14,9 +14,7 @@ export default defineConfig({
     timeout: 5_000,
   },
 
-  // false for now: EventHub's test account has shared state (bookings list,
-  // FIFO pruning) so parallel tests would step on each other until Stage 6
-  // (test data isolation) is in place. We'll flip this on later.
+ 
   fullyParallel: false,
 
   retries: process.env.CI ? 2 : 0,

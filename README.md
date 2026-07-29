@@ -75,7 +75,7 @@ See `.env.example`. Copy it to `.env` (gitignored) and fill in real values — n
 - [x] Stage 0 — Project setup & tooling
 - [x] Stage 1 — Config layer (`playwright.config.ts`)
 - [x] Stage 2 — Folder structure
-- [ ] Stage 3 — Page Object Model
+- [x] Stage 3 — Page Object Model
 - [ ] Stage 4 — Component objects & composition
 - [ ] Stage 5 — Fixtures & dependency injection
 - [ ] Stage 6 — Test data strategy

@@ -1,6 +1,7 @@
-import { test as base, Page } from '@playwright/test';
+import { Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
+import { test as base } from './apiFixtures';
 import { config } from '../config/env';
 import { LoginPage } from '../pages/LoginPage';
 import { EventsPage } from '../pages/EventsPage';

@@ -70,10 +70,29 @@ export const test = base.extend<PageObjectFixtures & AuthFixtures, WorkerFixture
   // Creates a fresh context PER TEST (test isolation preserved — no state
   // leaking between tests) but skips the login UI entirely by seeding
   // that context from the worker's cached storage state.
-  authenticatedPage: async ({ browser, authStatePath }, use) => {
+  //
+  // Also captures browser console messages and JS errors — a trace shows
+  // the DOM/network timeline, but a console error that fires without
+  // changing the DOM won't jump out of a trace's snapshot view the way
+  // it does as its own attachment. Only attached to the report on
+  // failure, so passing runs don't accumulate noise.
+  authenticatedPage: async ({ browser, authStatePath }, use, testInfo) => {
     const context = await browser.newContext({ storageState: authStatePath });
     const page = await context.newPage();
+
+    const consoleLogs: string[] = [];
+    page.on('console', (msg) => consoleLogs.push(`[${msg.type()}] ${msg.text()}`));
+    page.on('pageerror', (err) => consoleLogs.push(`[pageerror] ${err.message}`));
+
     await use(page);
+
+    if (testInfo.status !== testInfo.expectedStatus && consoleLogs.length > 0) {
+      await testInfo.attach('browser-console-log', {
+        body: consoleLogs.join('\n'),
+        contentType: 'text/plain',
+      });
+    }
+
     await context.close();
   },
 

@@ -28,7 +28,14 @@ export default defineConfig({
     headless: true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
-    trace: 'on-first-retry',
+    // 'on-first-retry' only captures a trace when a test RETRIES — and
+    // retries is 0 locally, so every local failure this session
+    // (the count() timing bug, the API baseURL bug) had NO trace to
+    // inspect, only error text. 'retain-on-failure' records every test
+    // always, discards it on pass, keeps it on any failure — retried
+    // or not. Slightly more overhead (always recording), worth it to
+    // never be without a trace when something breaks locally.
+    trace: 'retain-on-failure',
   },
 
   projects: [

@@ -1,7 +1,5 @@
 import { defineConfig, devices } from '@playwright/test';
-import * as dotenv from 'dotenv';
-
-dotenv.config();
+import { config } from './config/env';
 
 export default defineConfig({
   testDir: './tests',
@@ -14,7 +12,11 @@ export default defineConfig({
     timeout: 5_000,
   },
 
- 
+  // false for now: all tests share one login account (TEST_USER_EMAIL),
+  // and the app's booking-history limits are scoped to that account, not
+  // to the per-booking customer email — so parallel tests would still
+  // collide on shared account state. Stage 11 addresses this properly
+  // (multiple test accounts) rather than working around it here.
   fullyParallel: false,
 
   retries: process.env.CI ? 2 : 0,
@@ -22,7 +24,7 @@ export default defineConfig({
   reporter: 'html',
 
   use: {
-    baseURL: process.env.BASE_URL || 'https://eventhub.rahulshettyacademy.com',
+    baseURL: config.baseUrl,
     headless: true,
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',

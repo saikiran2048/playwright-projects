@@ -1,4 +1,5 @@
 import { test as base, Page } from '@playwright/test';
+import { config } from '../config/env';
 import { LoginPage } from '../pages/LoginPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
@@ -33,10 +34,7 @@ export const test = base.extend<PageObjectFixtures & AuthFixtures>({
   // fixtures depending on other custom fixtures, not just built-ins.
   authenticatedPage: async ({ page, loginPage }, use) => {
     await loginPage.open();
-    await loginPage.login(
-      process.env.TEST_USER_EMAIL!,
-      process.env.TEST_USER_PASSWORD!
-    );
+    await loginPage.login(config.testUser.email, config.testUser.password);
     await use(page);
   },
 

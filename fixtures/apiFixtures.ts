@@ -1,4 +1,5 @@
 import { test as base, APIRequestContext } from '@playwright/test';
+import { faker } from '@faker-js/faker';
 import { config } from '../config/env';
 
 type ApiFixtures = {
@@ -12,40 +13,55 @@ type ApiFixtures = {
 
 type ApiWorkerFixtures = {
   /**
-   * WORKER-scoped: one login API call per worker. The token is valid for
-   * 7 days per the API's own docs — no reason to re-fetch it every test.
+   * WORKER-scoped: a brand-new, throwaway account registered via API once
+   * per worker — NOT the shared TEST_USER_EMAIL account. This is what
+   * makes fullyParallel safe: each worker gets its own isolated sandbox
+   * for booking-history state, instead of every worker colliding on one
+   * account's booking limits. config.testUser stays reserved for
+   * login.spec.ts, which specifically needs a known, real account to
+   * verify the login form itself.
    */
+  workerTestUser: { email: string; password: string; token: string };
+
+  /** Thin derived fixture — just the token from workerTestUser. */
   authToken: string;
 };
 
 export const test = base.extend<ApiFixtures, ApiWorkerFixtures>({
-  authToken: [
+  workerTestUser: [
     async ({ playwright }, use) => {
-      const loginContext = await playwright.request.newContext({
+      const email = faker.internet.email().toLowerCase();
+      const password = 'TestPass123!';
+
+      const setupContext = await playwright.request.newContext({
         baseURL: config.apiBaseUrl,
       });
-      const response = await loginContext.post('auth/login', {
-        data: {
-          email: config.testUser.email,
-          password: config.testUser.password,
-        },
+      const response = await setupContext.post('auth/register', {
+        data: { email, password },
       });
       if (!response.ok()) {
         throw new Error(
-          `API login failed: ${response.status()} ${await response.text()}`
+          `Worker test user registration failed: ${response.status()} ${await response.text()}`
         );
       }
       const body = await response.json();
-      await loginContext.dispose();
+      await setupContext.dispose();
 
-      await use(body.token);
+      await use({ email, password, token: body.token });
+    },
+    { scope: 'worker' },
+  ],
+
+  authToken: [
+    async ({ workerTestUser }, use) => {
+      await use(workerTestUser.token);
     },
     { scope: 'worker' },
   ],
 
   // TEST-scoped: a fresh context per test (so response state from one test
   // can't leak into another via a shared context), pre-configured with
-  // baseURL and the cached bearer token — no repeated login.
+  // baseURL and the cached bearer token — no repeated login/registration.
   apiContext: async ({ playwright, authToken }, use) => {
     const context = await playwright.request.newContext({
       baseURL: config.apiBaseUrl,

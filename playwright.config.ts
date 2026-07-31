@@ -12,16 +12,16 @@ export default defineConfig({
     timeout: 5_000,
   },
 
-  // false for now: all tests share one login account (TEST_USER_EMAIL),
-  // and the app's booking-history limits are scoped to that account, not
-  // to the per-booking customer email — so parallel tests would still
-  // collide on shared account state. Stage 11 addresses this properly
-  // (multiple test accounts) rather than working around it here.
-  fullyParallel: false,
+  // Solved for real in Stage 11 rather than deferred further: each worker
+  // now registers its own throwaway account via API (see workerTestUser in
+  // apiFixtures.ts) instead of every worker sharing TEST_USER_EMAIL. No
+  // more collisions on shared booking-history limits.
+  fullyParallel: true,
 
   retries: process.env.CI ? 2 : 0,
 
   reporter: 'html',
+  workers: process.env.CI ? undefined : 4,
 
   use: {
     baseURL: config.baseUrl,
@@ -40,5 +40,7 @@ export default defineConfig({
 
   projects: [
     { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
   ],
 });

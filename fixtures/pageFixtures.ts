@@ -2,7 +2,6 @@ import { Page } from '@playwright/test';
 import * as fs from 'fs';
 import * as path from 'path';
 import { test as base } from './apiFixtures';
-import { config } from '../config/env';
 import { LoginPage } from '../pages/LoginPage';
 import { EventsPage } from '../pages/EventsPage';
 import { EventDetailPage } from '../pages/EventDetailPage';
@@ -40,7 +39,7 @@ type WorkerFixtures = {
 
 export const test = base.extend<PageObjectFixtures & AuthFixtures, WorkerFixtures>({
   authStatePath: [
-    async ({ browser }, use, workerInfo) => {
+    async ({ browser, workerTestUser }, use, workerInfo) => {
       const filePath = path.resolve(
         process.cwd(),
         'storage-state',
@@ -50,11 +49,14 @@ export const test = base.extend<PageObjectFixtures & AuthFixtures, WorkerFixture
 
       // A throwaway context, used only to perform the login once and
       // capture the resulting session — not the context any test runs in.
+      // Logs in as this worker's own registered account (workerTestUser),
+      // NOT the shared config.testUser — that's what keeps workers
+      // isolated from each other's booking-history state.
       const setupContext = await browser.newContext();
       const setupPage = await setupContext.newPage();
       const loginPage = new LoginPage(setupPage);
       await loginPage.open();
-      await loginPage.login(config.testUser.email, config.testUser.password);
+      await loginPage.login(workerTestUser.email, workerTestUser.password);
       await setupContext.storageState({ path: filePath });
       await setupContext.close();
 

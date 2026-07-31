@@ -1,4 +1,5 @@
 import { test, expect } from '../../fixtures/pageFixtures';
+import { CustomerDataBuilder } from '../../utils/CustomerDataBuilder';
 
 test.describe('Booking flow', () => {
   test.afterEach(async ({ bookingsPage }) => {
@@ -18,11 +19,10 @@ test.describe('Booking flow', () => {
 
     const pricePerTicket = await eventDetailPage.getPricePerTicket();
 
-    await eventDetailPage.bookTickets(1, {
-      name: 'Test User',
-      email: 'testuser@example.com',
-      phone: '9876543210',
-    });
+    // Fully generated — nothing in this test cares about the specific
+    // name/email/phone, only that the booking succeeds.
+    const customer = new CustomerDataBuilder().build();
+    await eventDetailPage.bookTickets(1, customer);
 
     await expect(eventDetailPage.isBookingConfirmed()).toBeVisible();
     const bookingRef = await eventDetailPage.getBookingRef();
@@ -44,11 +44,8 @@ test.describe('Booking flow', () => {
 
     const pricePerTicket = await eventDetailPage.getPricePerTicket();
 
-    await eventDetailPage.bookTickets(3, {
-      name: 'Multi Ticket User',
-      email: 'multi@example.com',
-      phone: '9876543210',
-    });
+    const customer = new CustomerDataBuilder().build();
+    await eventDetailPage.bookTickets(3, customer);
 
     await expect(eventDetailPage.quantity.count()).toHaveText('3');
     await expect(eventDetailPage.isBookingConfirmed()).toBeVisible();
@@ -68,11 +65,11 @@ test.describe('Booking flow', () => {
     await eventsPage.open();
     await eventsPage.bookEvent(0);
 
-    await eventDetailPage.bookTickets(1, {
-      name: 'Cancel Test User',
-      email: 'cancel@example.com',
-      phone: '9876543210',
-    });
+    // Override just the name — keeps the booking recognizable in a trace
+    // or screenshot for this specific flow, everything else stays random.
+    const customer = new CustomerDataBuilder().withName('Cancel Flow Test').build();
+    await eventDetailPage.bookTickets(1, customer);
+
     await expect(eventDetailPage.isBookingConfirmed()).toBeVisible();
     const bookingRef = await eventDetailPage.getBookingRef();
 

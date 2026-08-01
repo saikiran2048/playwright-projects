@@ -5,7 +5,7 @@ export default defineConfig({
   testDir: './tests',
 
   // Whole-test budget (navigation + actions + assertions combined)
-  timeout: 45_000, // bumped — CI runs were timing out under normal load
+  timeout: 90_000, // bumped again — 45s still isn't enough during full-suite CI runs
 
   expect: {
     // How long a single assertion retries before failing

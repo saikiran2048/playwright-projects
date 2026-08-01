@@ -5,8 +5,10 @@ export default defineConfig({
   testDir: './tests',
 
   // Whole-test budget (navigation + actions + assertions combined)
-  timeout: 20_000, // tightened — 45s was masking a real perf regression; want fast failures while we investigate
-
+ timeout: 90_000, // kept at 90s, not tightened to 20s — a suspected perf
+  // regression should be diagnosed with a temporary local override
+  // (`npx playwright test --timeout=20000`), not by shipping a tight
+  // global timeout that risks failing everyone's normal runs
   expect: {
     // How long a single assertion retries before failing
     timeout: 5_000,

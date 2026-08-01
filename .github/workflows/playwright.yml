@@ -21,6 +21,12 @@ jobs:
     - uses: actions/setup-node@v4
       with:
         node-version: lts/*
+    # Allure's report generator is Java-based — allure-playwright itself
+    # needs no JVM (writes raw results), but `allure generate` does.
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '21'
     - name: Install dependencies
       run: npm ci
     - name: Install Playwright Browser (${{ matrix.project }})
@@ -33,9 +39,27 @@ jobs:
         TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
         TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
+    - name: Generate Allure report
+      if: ${{ !cancelled() }}
+      run: npx allure generate allure-results --clean -o allure-report
+
     - uses: actions/upload-artifact@v4
       if: ${{ !cancelled() }}
       with:
         name: playwright-report-${{ matrix.project }}
         path: playwright-report/
+        retention-days: 30
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: allure-report-${{ matrix.project }}
+        path: allure-report/
+        retention-days: 30
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: junit-results-${{ matrix.project }}
+        path: reports/junit-results.xml
         retention-days: 30

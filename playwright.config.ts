@@ -29,7 +29,16 @@ export default defineConfig({
 
   retries: process.env.CI ? 2 : 0,
 
-  reporter: 'html',
+  // Three reporters, three audiences: HTML for local debugging (own report
+  // per browser project — see the matrix in the CI workflow), JUnit XML
+  // for CI tooling that parses it natively (Jenkins/Azure DevOps), Allure
+  // for a stakeholder-facing report with history trends. `open: 'never'`
+  // stops the html reporter trying to launch a browser in CI.
+  reporter: [
+    ['html', { open: 'never' }],
+    ['junit', { outputFile: 'reports/junit-results.xml' }],
+    ['allure-playwright', { resultsDir: 'allure-results' }],
+  ],
 
   use: {
     baseURL: config.baseUrl,

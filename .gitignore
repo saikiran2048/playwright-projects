@@ -3,6 +3,9 @@ playwright-report/
 test-results/
 blob-report/
 playwright/.cache/
+allure-results/
+allure-report/
+reports/
 .env
 .env.*
 !.env.example

@@ -5,7 +5,7 @@ export default defineConfig({
   testDir: './tests',
 
   // Whole-test budget (navigation + actions + assertions combined)
-  timeout: 45_000, // bumped — CI runs were timing out under normal load
+  timeout: 20_000, // tightened — 45s was masking a real perf regression; want fast failures while we investigate
 
   expect: {
     // How long a single assertion retries before failing

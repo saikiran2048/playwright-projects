@@ -18,10 +18,18 @@ export default defineConfig({
   // more collisions on shared booking-history limits.
   fullyParallel: true,
 
+  // Local run hit a real contention failure once (TC-011, "Target page,
+  // context or browser has been closed") running all 3 browser projects
+  // at full default parallelism on one machine — confirmed via
+  // --repeat-each=5 in isolation (5/5 pass), so it was resource pressure,
+  // not a flaky test. CI avoids this differently (see the workflow's
+  // matrix — one browser per job, one job per runner VM). Locally, 4 is a
+  // starting point — tune to your own CPU core count, not a fixed rule.
+  workers: process.env.CI ? undefined : 4,
+
   retries: process.env.CI ? 2 : 0,
 
   reporter: 'html',
-  workers: process.env.CI ? undefined : 4,
 
   use: {
     baseURL: config.baseUrl,

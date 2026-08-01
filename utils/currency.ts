@@ -1,3 +1,4 @@
-export function formatPrice(amount: number): string {
-  return `$${amount.toLocaleString()}`;
+
+export function parsePrice(text: string): number {
+  return parseFloat(text.replace(/[$,]/g, ''));
 }

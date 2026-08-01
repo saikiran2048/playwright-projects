@@ -44,10 +44,18 @@ test.describe('Booking flow', () => {
 
     const pricePerTicket = await eventDetailPage.getPricePerTicket();
 
-    const customer = new CustomerDataBuilder().build();
-    await eventDetailPage.bookTickets(3, customer);
-
+    // Quantity must be asserted BEFORE submitting — once the form submits,
+    // the confirmation card replaces it in the DOM and #ticket-count stops
+    // existing entirely. Asserting it after bookTickets() (which submits)
+    // was the actual bug: intermittent because it raced the confirmation
+    // re-render rather than reliably failing.
+    await eventDetailPage.quantity.increment(2);
     await expect(eventDetailPage.quantity.count()).toHaveText('3');
+
+    const customer = new CustomerDataBuilder().build();
+    await eventDetailPage.bookingForm.fill(customer);
+    await eventDetailPage.bookingForm.submit();
+
     await expect(eventDetailPage.isBookingConfirmed()).toBeVisible();
     await expect(eventDetailPage.ticketsRowValue()).toHaveText('3');
 

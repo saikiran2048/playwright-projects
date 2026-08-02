@@ -5,7 +5,7 @@ test.describe('Booking — API setup, UI verification', () => {
     await apiContext.delete('bookings');
   });
 
-  test('a booking created via API appears correctly on the My Bookings screen', async ({
+  test('a booking created via API appears correctly on the My Bookings screen', { tag: '@regression' }, async ({
     apiContext,
     bookingsPage,
   }) => {

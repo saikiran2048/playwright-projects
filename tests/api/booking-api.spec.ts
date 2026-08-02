@@ -8,7 +8,7 @@ test.describe('Booking API', () => {
     await apiContext.delete('bookings');
   });
 
-  test('creating a booking returns a correctly formatted ref and persists it', async ({
+  test('creating a booking returns a correctly formatted ref and persists it', { tag: '@smoke' }, async ({
     apiContext,
   }) => {
     const eventsResponse = await apiContext.get('events');
@@ -41,7 +41,7 @@ test.describe('Booking API', () => {
     expect(fetched.quantity).toBe(1);
   });
 
-  test('quantity 0 is rejected with a 400 and a field-level validation message', async ({
+  test('quantity 0 is rejected with a 400 and a field-level validation message', { tag: '@regression' }, async ({
     apiContext,
   }) => {
     const eventsResponse = await apiContext.get('events');

@@ -83,14 +83,34 @@ jobs:
         path: all-blob-reports
         merge-multiple: true
 
-    - name: Merge into one HTML report
-      run: npx playwright merge-reports --reporter=html ./all-blob-reports
+    - name: Merge into one HTML report + JSON stats
+      run: npx playwright merge-reports --config=merge-reports.config.ts ./all-blob-reports
 
     - uses: actions/upload-artifact@v4
       with:
         name: merged-html-report
         path: playwright-report/
         retention-days: 30
+
+    - name: Build email summary from merged stats
+      run: node scripts/build-email-summary.js
+
+    - name: Zip the full HTML report for email attachment
+      run: zip -r merged-html-report.zip playwright-report
+
+    - name: Email regression summary
+      if: ${{ !cancelled() }}
+      uses: dawidd6/action-send-mail@v3
+      with:
+        server_address: smtp.gmail.com
+        server_port: 465
+        username: ${{ secrets.GMAIL_USERNAME }}
+        password: ${{ secrets.GMAIL_APP_PASSWORD }}
+        from: EventHub CI <${{ secrets.GMAIL_USERNAME }}>
+        to: ${{ secrets.REPORT_EMAIL_TO }}
+        subject: "EventHub Regression: ${{ env.PASS_RATE }}% pass (${{ env.TOTAL_TESTS }} tests, ${{ env.FAILED_TESTS }} failed)"
+        html_body: file://reports/email-summary.html
+        attachments: merged-html-report.zip
 
     - name: Download all Allure results
       uses: actions/download-artifact@v4

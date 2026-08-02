@@ -5,10 +5,8 @@ export default defineConfig({
   testDir: './tests',
 
   // Whole-test budget (navigation + actions + assertions combined)
- timeout: 90_000, // kept at 90s, not tightened to 20s — a suspected perf
-  // regression should be diagnosed with a temporary local override
-  // (`npx playwright test --timeout=20000`), not by shipping a tight
-  // global timeout that risks failing everyone's normal runs
+  timeout: 30_000,
+
   expect: {
     // How long a single assertion retries before failing
     timeout: 5_000,
@@ -31,13 +29,15 @@ export default defineConfig({
 
   retries: process.env.CI ? 2 : 0,
 
-  // Three reporters, three audiences: HTML for local debugging (own report
-  // per browser project — see the matrix in the CI workflow), JUnit XML
-  // for CI tooling that parses it natively (Jenkins/Azure DevOps), Allure
-  // for a stakeholder-facing report with history trends. `open: 'never'`
-  // stops the html reporter trying to launch a browser in CI.
+  // Four reporters now: HTML for local debugging, JUnit XML for CI-tool
+  // parsing, Allure for stakeholder-facing trend reports, and blob — blob
+  // is what makes SHARDING viable: each shard only sees its own slice of
+  // tests, so each shard's own html/junit/allure output is incomplete on
+  // its own. blob produces a compact per-shard result file that a separate
+  // merge step (see regression.yml) combines into one full report.
   reporter: [
     ['html', { open: 'never' }],
+    ['blob'],
     ['junit', { outputFile: 'reports/junit-results.xml' }],
     ['allure-playwright', { resultsDir: 'allure-results' }],
   ],
@@ -58,8 +58,14 @@ export default defineConfig({
   },
 
   projects: [
-    { name: 'chromium', use: { ...devices['Desktop Chrome'] } },
-    { name: 'firefox', use: { ...devices['Desktop Firefox'] } },
-    { name: 'webkit', use: { ...devices['Desktop Safari'] } },
+    // Visual regression EXCLUDED from all 3 functional projects — it gets
+    // its own dedicated project below instead, scoped to one browser only.
+    { name: 'chromium', testIgnore: /visual-regression\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
+    { name: 'firefox', testIgnore: /visual-regression\.spec\.ts/, use: { ...devices['Desktop Firefox'] } },
+    { name: 'webkit', testIgnore: /visual-regression\.spec\.ts/, use: { ...devices['Desktop Safari'] } },
+    // Chromium only, deliberately — screenshots are render-engine specific.
+    // A Firefox screenshot compared against a Chromium baseline is a
+    // meaningless diff, not a real regression signal.
+    { name: 'visual', testMatch: /visual-regression\.spec\.ts/, use: { ...devices['Desktop Chrome'] } },
   ],
 });

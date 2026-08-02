@@ -1,0 +1,65 @@
+name: Smoke Tests
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  smoke:
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browser (${{ matrix.project }})
+      run: npx playwright install --with-deps ${{ matrix.project }}
+    - name: Run smoke tests (${{ matrix.project }})
+      run: npx playwright test --project=${{ matrix.project }} --grep @smoke
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: smoke-report-${{ matrix.project }}
+        path: playwright-report/
+        retention-days: 14
+
+  visual:
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browser (chromium)
+      run: npx playwright install --with-deps chromium
+    - name: Run visual regression
+      run: npx playwright test --project=visual
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: visual-report
+        path: playwright-report/
+        retention-days: 14

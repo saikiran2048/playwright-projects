@@ -8,6 +8,9 @@ on:
     - cron: '0 2 * * *'
   workflow_dispatch: {}
 
+permissions:
+  contents: read
+
 jobs:
   test:
     timeout-minutes: 45
@@ -119,11 +122,42 @@ jobs:
         path: allure-results
         merge-multiple: true
 
+    # Native GitHub Pages deployment (actions/deploy-pages) has no persistent
+    # branch to check out mid-workflow — the artifact is deployed fresh each
+    # run. To keep Allure's trend graphs continuous across runs anyway, pull
+    # the CURRENTLY LIVE site's history/*.json files before generating the
+    # new report. Allure reads allure-results/history at generate time and
+    # folds it into the new report's own history — which becomes next run's
+    # source. First run ever: nothing to fetch, fails harmlessly.
+    - name: Fetch previous Allure history from live Pages site
+      continue-on-error: true
+      run: |
+        mkdir -p allure-results/history
+        REPO_NAME=$(basename "${{ github.repository }}")
+        BASE_URL="https://${{ github.repository_owner }}.github.io/${REPO_NAME}/history"
+        for f in history.json history-trend.json categories-trend.json duration-trend.json retry-trend.json; do
+          curl -sf "$BASE_URL/$f" -o "allure-results/history/$f" || rm -f "allure-results/history/$f"
+        done
+
     - name: Generate merged Allure report
       run: npx allure generate allure-results --clean -o allure-report
 
-    - uses: actions/upload-artifact@v4
+    - name: Upload Allure report as Pages artifact
+      uses: actions/upload-pages-artifact@v3
       with:
-        name: merged-allure-report
-        path: allure-report/
-        retention-days: 30
+        path: allure-report
+
+  deploy-allure-pages:
+    needs: merge-reports
+    if: ${{ !cancelled() }}
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4

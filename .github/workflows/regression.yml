@@ -113,7 +113,6 @@ jobs:
         to: ${{ secrets.REPORT_EMAIL_TO }}
         subject: "EventHub Regression: ${{ env.PASS_RATE }}% pass (${{ env.TOTAL_TESTS }} tests, ${{ env.FAILED_TESTS }} failed)"
         html_body: file://reports/email-summary.html
-        attachments: merged-html-report.zip
 
     - name: Download all Allure results
       uses: actions/download-artifact@v4

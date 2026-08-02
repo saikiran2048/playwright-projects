@@ -78,11 +78,11 @@ See `.env.example`. Copy it to `.env` (gitignored) and fill in real values — n
 - [x] Stage 3 — Page Object Model
 - [x] Stage 4 — Component objects & composition
 - [x] Stage 5 — Fixtures & dependency injection
-- [ ] Stage 6 — Test data strategy
-- [ ] Stage 7 — Environment management
-- [ ] Stage 8 — Authentication & session management
-- [ ] Stage 9 — API + UI hybrid testing
-- [ ] Stage 10 — Debugging artifacts (screenshots/video/trace)
-- [ ] Stage 11 — Parallelism & cross-browser execution
-- [ ] Stage 12 — Reporting
-- [ ] Stage 13 — Flaky-test handling & CI/CD
+- [x] Stage 6 — Test data strategy
+- [x] Stage 7 — Environment management
+- [x] Stage 8 — Authentication & session management
+- [x] Stage 9 — API + UI hybrid testing
+- [x] Stage 10 — Debugging artifacts (screenshots/video/trace)
+- [x] Stage 11 — Parallelism & cross-browser execution
+- [x] Stage 12 — Reporting
+- [x] Stage 13 — Flaky-test handling & CI/CD

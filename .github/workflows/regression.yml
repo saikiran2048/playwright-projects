@@ -1,0 +1,109 @@
+name: Regression Tests
+on:
+  push:
+    branches: [ main, master ]
+  schedule:
+    # Nightly at 02:00 UTC — full regression doesn't need to block every PR,
+    # but should run comprehensively on some cadence without a human triggering it.
+    - cron: '0 2 * * *'
+  workflow_dispatch: {}
+
+jobs:
+  test:
+    timeout-minutes: 45
+    runs-on: ubuntu-latest
+    strategy:
+      # project x shard — e.g. chromium gets split into 2 independent
+      # slices, each on its own runner VM. 3 projects x 2 shards = 6 jobs
+      # total, all running concurrently instead of one project processing
+      # its full test list serially.
+      fail-fast: false
+      matrix:
+        project: [chromium, firefox, webkit]
+        shardIndex: [1, 2]
+        shardTotal: [2]
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - name: Install dependencies
+      run: npm ci
+    - name: Install Playwright Browser (${{ matrix.project }})
+      run: npx playwright install --with-deps ${{ matrix.project }}
+    - name: Run tests (${{ matrix.project }}, shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
+      run: >
+        npx playwright test --project=${{ matrix.project }}
+        --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
+      env:
+        BASE_URL: ${{ secrets.BASE_URL }}
+        API_BASE_URL: ${{ secrets.API_BASE_URL }}
+        TEST_USER_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+        TEST_USER_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+    # Uploaded per-shard, unmerged — the merge job below combines these.
+    # blob-report: Playwright's own format for merging into one HTML report.
+    # allure-results: raw JSON, safe to combine by directory (unique
+    # filenames per test run — no overwrite risk when merged).
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: blob-report-${{ matrix.project }}-${{ matrix.shardIndex }}
+        path: blob-report/
+        retention-days: 7
+
+    - uses: actions/upload-artifact@v4
+      if: ${{ !cancelled() }}
+      with:
+        name: allure-results-${{ matrix.project }}-${{ matrix.shardIndex }}
+        path: allure-results/
+        retention-days: 7
+
+  merge-reports:
+    needs: test
+    if: ${{ !cancelled() }}
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: actions/setup-node@v4
+      with:
+        node-version: lts/*
+    - uses: actions/setup-java@v4
+      with:
+        distribution: temurin
+        java-version: '21'
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Download all blob reports
+      uses: actions/download-artifact@v4
+      with:
+        pattern: blob-report-*
+        path: all-blob-reports
+        merge-multiple: true
+
+    - name: Merge into one HTML report
+      run: npx playwright merge-reports --reporter=html ./all-blob-reports
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: merged-html-report
+        path: playwright-report/
+        retention-days: 30
+
+    - name: Download all Allure results
+      uses: actions/download-artifact@v4
+      with:
+        pattern: allure-results-*
+        path: allure-results
+        merge-multiple: true
+
+    - name: Generate merged Allure report
+      run: npx allure generate allure-results --clean -o allure-report
+
+    - uses: actions/upload-artifact@v4
+      with:
+        name: merged-allure-report
+        path: allure-report/
+        retention-days: 30

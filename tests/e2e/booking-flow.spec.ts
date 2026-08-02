@@ -9,7 +9,7 @@ test.describe('Booking flow', () => {
     await bookingsPage.clearAllBookings();
   });
 
-  test('TC-007: book a single ticket — ref format and total validated', async ({
+  test('TC-007: book a single ticket — ref format and total validated', { tag: '@smoke' }, async ({
     eventsPage,
     eventDetailPage,
   }) => {
@@ -35,7 +35,7 @@ test.describe('Booking flow', () => {
     expect(total).toBe(pricePerTicket);
   });
 
-  test('TC-008: book 3 tickets — quantity and total validated', async ({
+  test('TC-008: book 3 tickets — quantity and total validated', { tag: '@regression' }, async ({
     eventsPage,
     eventDetailPage,
   }) => {
@@ -63,7 +63,7 @@ test.describe('Booking flow', () => {
     expect(total).toBe(pricePerTicket * 3);
   });
 
-  test('TC-011: cancel a booking from detail page', async ({
+  test('TC-011: cancel a booking from detail page', { tag: '@regression' }, async ({
     authenticatedPage,
     eventsPage,
     eventDetailPage,

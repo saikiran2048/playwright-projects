@@ -126,7 +126,7 @@ const html = `<!DOCTYPE html>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:20px;">
                 <tr>
                   <td style="font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#888888;">
-                    Full HTML report attached (zip). Run: ${process.env.GITHUB_RUN_ID || 'local'} —
+                    Full HTML report at: https://saikiran2048.github.io/playwright-projects/. Run: ${process.env.GITHUB_RUN_ID || 'local'} —
                     ${process.env.GITHUB_SERVER_URL || ''}/${process.env.GITHUB_REPOSITORY || ''}/actions/runs/${process.env.GITHUB_RUN_ID || ''}
                   </td>
                 </tr>
